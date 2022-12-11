@@ -81,7 +81,7 @@ LweSample* end ( int l,  const LweSample* c, const TFheGateBootstrappingCloudKey
             // # "And" the current bit and the next bit, and add the result
             // # to the resulting string
             bootsAND(r, &c[i], &c[i+1], bk);
-            resul[i]=r;
+            resul[i/2]=r;
         
         }
         
