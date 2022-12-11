@@ -94,7 +94,8 @@ void export_ciphertext(LweSample* ciphertext, const TFheGateBootstrappingParamet
     fclose(cloud_data);
 }
 
-
+// it does performs the AND  operations till the result is in a single bit
+//input : xnor lwesample array c , cloudkey set - output - one bit lwesample , length of the lwesample array 
 LweSample* end ( LweSample* result , const LweSample* c, const TFheGateBootstrappingCloudKeySet* bk)
 {
 
