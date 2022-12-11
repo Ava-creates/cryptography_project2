@@ -29,6 +29,7 @@ STRING COMPARISON: [pass ciphertext read from cloud.data & encrypted query strin
 
 DERIVATION OF FINAL ANSWER: [encrypted final answer passed into decrypt method with scret key, returns final answer as an integer]
 
+***Due to difficulties encountered installing and using the library, we were unable to test our code as a whole, and unable to produce code that compiles without extensive setup and installation. Our code is thouroughly commented for legibility to provide some more clarification as to what each section does.
 
 
     WORKS CITED
