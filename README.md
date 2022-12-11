@@ -19,8 +19,12 @@ represented in 8 bits when converted to ASCII, and the library we used encrypted
 The organization of the
 code follows this general format:
     
-TO ENCRYPT & STORE PLAINTEXT: [key generation -> input plaintext string to array of 16-bit integers -> encrypt 16-bit integer -> add 16 ciphertext bits to cloud.data file]
-    
+TO ENCRYPT & STORE PLAINTEXT: [key generation -> store secret & cloud keys in secret.key & cloud.key, respectively -> input plaintext string to array of 16-bit integers -> encrypt 16-bit integer -> add 16 ciphertext bits to cloud.data file -> repeat until all bits are exported into cloud.data]
+
+TO ENCRYPT & STORE QUERY STRING: [input plaintext string to array of 16-bit integers -> encrypt 16-bit integer (with same keys as above) -> add 16 ciphertext bits to query.data file -> repeat until all bits are exported into query.data]
+
+
+
 
 
     WORKS CITED
