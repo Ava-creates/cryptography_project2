@@ -93,16 +93,14 @@ void export_ciphertext(LweSample* ciphertext, const TFheGateBootstrappingParamet
 int main() {
 
     /*
-    TEST STRING INPUT S
+    TEST STRING INPUT S & Q
     */
     const std::string s = "This is my test string.";
+    const std::string q = "string";
 
 
     const int minimum_lambda = 110;
     generate_keys(minimum_lambda);
-
-    std::vector<int16_t> bitarray = string_to_bitarray(s);
-    int buffer = sizeof(bitarray);
 
     FILE* secret_key = fopen("secret.key","rb");
     TFheGateBootstrappingSecretKeySet* key = new_tfheGateBootstrappingSecretKeySet_fromFile(secret_key);
@@ -114,21 +112,38 @@ int main() {
 
     const TFheGateBootstrappingParameterSet* params = key->params;
     LweSample* initial_ciphertext = init_ciphertext_array(params);
+    LweSample* initial_query = init_ciphertext_array(params);
 
-    for (int i=0; i<buffer; i++) {
-        export_ciphertext(encrypt16(bitarray[i], initial_ciphertext, key), params);
+    std::vector<int16_t> bitarrayS = string_to_bitarray(s);
+    int bufferS = sizeof(bitarrayS);
+    for (int i=0; i<bufferS; i++) {
+        export_ciphertext(encrypt16(bitarrayS[i], initial_ciphertext, key), params);
     }
 
-    // LweSample* cipher = new_gate_bootstrapping_ciphertext_array(16, key->params);
-    // FILE* cloud_data = fopen("cloud.data","rb");
-    // for (int i=0; i<16; i++) 
-    //     import_gate_bootstrapping_ciphertext_fromFile(cloud_data, &cipher[i], params);
-    // fclose(cloud_data);
+    //encrypts and stores query into query.data
+    std::vector<int16_t> bitarrayQ = string_to_bitarray(q);
+    int bufferQ = sizeof(bitarrayQ);
+    FILE* query_data = fopen("query.data","wb");
+    for (int i=0; i<bufferQ; i++) {
+        for (int i=0; i<16; i++) {
+        export_gate_bootstrapping_ciphertext_toFile(query_data, encrypt16(bitarrayQ[i], initial_query, key), params);
+        }
+    }
+    fclose(query_data);
+    
+    /*
+    STILL TO INTEGRATE:
+        - read LweSamples from query.data and cloud.data
+        - feed LweSamples to comparison algo
+        - make integer output answer into 16 bit fixed width integer
+        - encrypt and write into answer.data
+    */
+
 
     //decrypt answer.data file
     LweSample* answer = new_gate_bootstrapping_ciphertext_array(16, params);
     FILE* answer_data = fopen("answer.data","rb");
-    for (int i=0; i<(16*buffer); i++) {
+    for (int i=0; i<16; i++) {
         import_gate_bootstrapping_ciphertext_fromFile(answer_data, &answer[i], params);
     }
     fclose(answer_data);
