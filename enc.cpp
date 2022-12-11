@@ -99,12 +99,24 @@ LweSample* end ( int l,  const LweSample* c, const TFheGateBootstrappingCloudKey
 //compares two strings and returns the lwesample bit (0 ==false && 1==true)
 LweSample* compare_strings( const LweSample* a, const LweSample* b, int n, const TFheGateBootstrappingCloudKeySet* bk)
 { 
-    int len = sizeof(a)/sizeof(a[0]);
+//     int len = sizeof(a)/sizeof(a[0]);
+    
+    LweSample* x= &a[0];
+    int len=0
+        
+        //figuring out the length of the lwesample array which is basically the bits of the encrypted string 
+    while(x!=NULL)
+    {
+        len+=1;
+        x= &a[len];
+     }
+    
+    
     LweSample* t= new_gate_bootstrapping_ciphertext(bk->params);
     bootsCONSTANT(t, 0, bk);
-    LweSample* resul[ len ]; 
+    LweSample* resul[ len+1 ]; 
 
-    if(len != n)
+    if((len+1) != n)
     {
         resul[0]=t;
         cout << resul[0];
