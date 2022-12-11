@@ -25,27 +25,13 @@ int16_t decrypt(LweSample* answer, TFheGateBootstrappingSecretKeySet* key) {
 
 /*
 INPUT - String 
-OUTPUT - Array of 16-bit integers + 2 charracters per int
+OUTPUT - Array of 16-bit integers, each int represents 1 encoded char
 */
 std::vector<int16_t> string_to_bitarray(const std::string& s) {
 	int n = s.size();
 	std::vector<int16_t> binarystr;
-	std::stack<int16_t> reverse;
-	for (int i = n - 1; i >= 0; i--) {
-		if ((n - i) % 2 == 1) {
-			reverse.push((int16_t)s[i]);	//Every other character, push onto the stack
-		}
-		else {
-			int16_t temp = reverse.top();
-			std::cout << ((int16_t)s[i] << 8) << " ";
-			reverse.pop();                              //Every other character, add the character shifted 1 char size (8bits)
-			reverse.push(((int16_t)s[i] << 8) + (int16_t)temp);    //left to the existing value on the stack
-		}
-
-	}
-	while (!reverse.empty()) {
-		binarystr.push_back(reverse.top());	//Reverse the order
-		reverse.pop();
+	for (int i = 0; i<n; i++) {
+        binarystr.push_back((int16_t)s[i]);
 	}
 	return binarystr;
 }
