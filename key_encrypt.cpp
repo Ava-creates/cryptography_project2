@@ -10,6 +10,15 @@
 
 // using namespace std;
 
+int16_t decrypt(LweSample* answer, TFheGateBootstrappingSecretKeySet* key) {
+    int16_t int_answer = 0;
+    for (int i=0; i<16; i++) {
+        int ai = bootsSymDecrypt(&answer[i], key);
+        int_answer |= (ai<<i);
+    }
+    return int_answer;
+}
+
 std::vector<int16_t> string_to_bitarray(const std::string& s) {
 	int n = s.size();
 	std::vector<int16_t> binarystr;
@@ -58,24 +67,26 @@ void generate_keys(const int minimum_lambda) {
 
 }
 
+// creates empty ciphertext array to be updated by encrypt16()
+LweSample* init_ciphertext_array(const TFheGateBootstrappingParameterSet* params) {
+    LweSample* initCipher = new_gate_bootstrapping_ciphertext_array(16, params);
+    return initCipher;
+}
+
 //encrypt the 16 bits of input
-LweSample* encrypt16(int16_t plaintext, const TFheGateBootstrappingParameterSet* params, const TFheGateBootstrappingSecretKeySet* key) {
-    LweSample* ciphertext = new_gate_bootstrapping_ciphertext_array(16, params);
+LweSample* encrypt16(int16_t plaintext, LweSample* ciphertext, const TFheGateBootstrappingSecretKeySet* key) {
     for (int i=0; i<16; i++) {
         bootsSymEncrypt(&ciphertext[i], (plaintext>>i)&1, key);
     }
-    // delete_gate_bootstrapping_ciphertext_array(16, ciphertext);
     return ciphertext;
 }
 
 void export_ciphertext(LweSample* ciphertext, const TFheGateBootstrappingParameterSet* params) {
-    //export the 2x16 ciphertexts to a file (for the cloud)
     FILE* cloud_data = fopen("cloud.data","wb");
     for (int i=0; i<16; i++) {
         export_gate_bootstrapping_ciphertext_toFile(cloud_data, &ciphertext[i], params);
     }
     fclose(cloud_data);
-
 }
 
 
@@ -102,9 +113,10 @@ int main() {
     fclose(cloud_key);
 
     const TFheGateBootstrappingParameterSet* params = key->params;
+    LweSample* initial_ciphertext = init_ciphertext_array(params);
 
     for (int i=0; i<buffer; i++) {
-        export_ciphertext(encrypt16(bitarray[i], params, key), params);
+        export_ciphertext(encrypt16(bitarray[i], initial_ciphertext, key), params);
     }
 
     // LweSample* cipher = new_gate_bootstrapping_ciphertext_array(16, key->params);
@@ -113,6 +125,12 @@ int main() {
     //     import_gate_bootstrapping_ciphertext_fromFile(cloud_data, &cipher[i], params);
     // fclose(cloud_data);
 
-
-    
+    //decrypt answer.data file
+    LweSample* answer = new_gate_bootstrapping_ciphertext_array(16, params);
+    FILE* answer_data = fopen("answer.data","rb");
+    for (int i=0; i<(16*buffer); i++) {
+        import_gate_bootstrapping_ciphertext_fromFile(answer_data, &answer[i], params);
+    }
+    fclose(answer_data);
+    int final_answer = decrypt(answer, key);
 }
