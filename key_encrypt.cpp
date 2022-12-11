@@ -95,6 +95,72 @@ void export_ciphertext(LweSample* ciphertext, const TFheGateBootstrappingParamet
 }
 
 
+LweSample* end ( LweSample* result , const LweSample* c, const TFheGateBootstrappingCloudKeySet* bk)
+{
+
+    int l= sizeof(c)/sizeof(c[0]);
+
+
+    LweSample* resul[ l ]; 
+    LweSample* r= new_gate_bootstrapping_ciphertext(bk->params);  //uh not sure how to make it one variable 
+
+    for (int i =0; i<l-1; i+=2)
+
+        {
+        
+            // # "And" the current bit and the next bit, and add the result
+            // # to the resulting string
+            bootsAND(r, &c[i], &c[i+1], bk);
+            resul[i]=r;
+        
+        }
+        
+    while( l>1){
+        
+        for (int i =0; i<l-1; i+=2)
+
+        {
+        
+            // # "And" the current bit and the next bit, and add the result
+            // # to the resulting string
+            bootsAND(r, &c[i], &c[i+1], bk);
+            resul[i]=r;
+        
+        }
+        
+        l=l/2;
+        
+    }
+
+
+    return resul[0];
+
+}
+
+LweSample* compare_strings(const LweSample* a, const LweSample* b, int start, int end ,  const TFheGateBootstrappingCloudKeySet* bk)
+{ 
+    int len = sizeof(a)/sizeof(a[0]);
+    LweSample* t= new_gate_bootstrapping_ciphertext(bk->params);
+    bootsCONSTANT(t, 0, bk);
+    LweSample* resul[ len ]; 
+
+    LweSample* tmps = new_gate_bootstrapping_ciphertext_array(n, bk->params);   
+
+    // not sure what exactly the above thing gives but hopefully an array of len equal to n 
+
+    for (int i = start ; i< end ; i++)
+        {
+            bootsXNOR(&tmps[i], &a[i], &b[i], bk); 
+            //    # the xnor to check equality   for every bit and storing the result in     tmps  
+           
+        }
+
+    // LweSample* result = new_gate_bootstrapping_ciphertext_array(n-1, bk->params);   
+    return end(result, tmps, bk);
+
+}
+
+
 int main() {
 
     /*
@@ -149,6 +215,65 @@ int main() {
         - make integer output answer into 16 bit fixed width integer
         - encrypt and write into answer.data
     */
+	
+    //read encrypted LweSamples from query.data and cloud.data
+	
+   FILE* query = fopen("query.data","rb");
+   LweSample* searchword[bufferQ];
+   
+	
+   for (int i=0; i<bufferQ; i++) {   
+	searchword[i] = new_gate_bootstrapping_ciphertext_array(16, params);
+        for (int j=0; j<16; j++) {
+        import_gate_bootstrapping_ciphertext_toFile(query , &searchword[i] , params);
+        }
+    }
+   
+   fclose(query);
+	
+   FILE* cipher = fopen("cloud.data","rb");
+   LweSample* ciphertexts[bufferS];  
+	
+   // import_gate_bootstrapping_ciphertext_fromFile(cipher, ciphertexts ,params);
+   
+    int len= bufferS*16;
+    LweSample* ciphertexts[bufferS]; 
+	
+    for (int i=0; i<bufferS; i++) {   
+	ciphertexts[i] = new_gate_bootstrapping_ciphertext_array(16, params);
+        for (int j=0; j<16; j++) {
+        import_gate_bootstrapping_ciphertext_toFile(cipher , &ciphertexts[i] , params);
+        }
+    }
+	
+    fclose(cipher);
+	
+	
+    //ciphertexts array is an array of lwesamples that are 16 bit long 
+    //looping over this array to compare strings
+	
+    LweSample* result[bufferS- bufferQ];
+	
+    int count = 0;
+	
+    LweSample* comp=  new_gate_bootstrapping_ciphertext(params);
+	
+    bootsCONSTANT(comp , 0, bk);
+		
+    for ( int i =0; i<(bufferS- bufferQ); i++)
+    { 
+	    result[i]= compare_strings(  &ciphertexts [i] , &searchword[i] , i , i+ bufferQ  ,  bk);
+	    
+	    count += result[i];
+    
+    }    
+		    
+    LweSample* ans= new_gate_bootstrapping_ciphertext_array(16, params);
+    bootsSymEncrypt(ans , count , params);
+    
+    FILE* answ = fopen("answer.data","wb");
+    export_tfheGateBootstrappingSecretKeySet_toFile(ans,  key);
+    fclose(answ);
 
 
     //decrypt answer.data file & save final answer into variable 'final answer'
