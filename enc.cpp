@@ -50,11 +50,12 @@ void export_ciphertext(LweSample* &ciphertext, TFheGateBootstrappingParameterSet
 
 }
 
-/// duh duh duh 
-LweSample* end ( LweSample* result , const LweSample* c, const TFheGateBootstrappingCloudKeySet* bk)
+// it does performs the AND  operations till the result is in a single bit
+//input : xnor lwesample array c , cloudkey set - output - one bit lwesample , length of the lwesample array 
+LweSample* end ( int l,  const LweSample* c, const TFheGateBootstrappingCloudKeySet* bk)
 {
 
-    int l= sizeof(c)/sizeof(c[0]);
+    //int l= sizeof(c)/sizeof(c[0]);
 
 
     LweSample* resul[ l ]; 
@@ -93,7 +94,10 @@ LweSample* end ( LweSample* result , const LweSample* c, const TFheGateBootstrap
 
 }
 
-LweSample* compare_strings(LweSample* result, const LweSample* a, const LweSample* b, int n, const TFheGateBootstrappingCloudKeySet* bk)
+// input - encrypted string ( not a sentence )+ encrypted query word  (lwesample array pointers) , length of encrypted query word (int) , cloudkeyset
+//output - one bit lwesample 
+//compares two strings and returns the lwesample bit (0 ==false && 1==true)
+LweSample* compare_strings( const LweSample* a, const LweSample* b, int n, const TFheGateBootstrappingCloudKeySet* bk)
 { 
     int len = sizeof(a)/sizeof(a[0]);
     LweSample* t= new_gate_bootstrapping_ciphertext(bk->params);
